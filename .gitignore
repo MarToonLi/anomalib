@@ -179,3 +179,5 @@ mlruns
 
 
 *.blob
+outputs/**/*.png
+# 将outputs文件夹下的各级子目录下的以png为后缀的文件不被追踪
