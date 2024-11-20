@@ -147,6 +147,9 @@ class ExportMixin:
             else {"input": {0: "batch_size", 2: "height", 3: "weight"}, "output": {0: "batch_size"}}
         )
         _write_metadata_to_json(self._get_metadata(task), export_root)
+        
+        print("opset_versissssson: {};".format(14))
+        
         onnx_path = export_root / "model.onnx"
         torch.onnx.export(
             inference_model,
@@ -157,6 +160,7 @@ class ExportMixin:
             input_names=["input"],
             output_names=["output"],
         )
+        
 
         return onnx_path
 
