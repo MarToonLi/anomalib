@@ -270,7 +270,7 @@ class AllInOneBlock(InvertibleModule):
         a *= 0.1
         ch = x.shape[1]
 
-        sub_jac = self.clamp * torch.tanh(a[:, :ch])
+        sub_jac = self.clamp * torch.tanh(a[:, :ch])    # a [1, 64, 112, 112] -> sub_jac [1, 32, 112, 112];  *0.1 -> *clamp 
         if self.GIN:
             sub_jac -= torch.mean(sub_jac, dim=self.sum_dims, keepdim=True)
 
@@ -303,12 +303,12 @@ class AllInOneBlock(InvertibleModule):
         elif self.reverse_pre_permute:
             x = (self._pre_permute(x[0], rev=False),)
 
-        x1, x2 = torch.split(x[0], self.splits, dim=1)
+        x1, x2 = torch.split(x[0], self.splits, dim=1)            # x [1, 64, 112, 112] -> x1 [1, 32, 112, 112]; x2 [1, 32, 112, 112];
 
         x1c = torch.cat([x1, *c], 1) if self.conditional else x1
 
         if not rev:
-            a1 = self.subnet(x1c)
+            a1 = self.subnet(x1c)                                 # a1 [1, 64, 112, 112]
             x2, j2 = self._affine(x2, a1)
         else:
             a1 = self.subnet(x1c)

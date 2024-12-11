@@ -70,15 +70,15 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
         Returns:
             Tensor | dict[str, torch.Tensor]: Embedding for training, anomaly map and anomaly score for testing.
         """
-        output_size = input_tensor.shape[-2:]
+        output_size = input_tensor.shape[-2:]                 # input_tensor [1, 3, 256, 256]
         if self.tiler:
             input_tensor = self.tiler.tile(input_tensor)
 
         with torch.no_grad():
-            features = self.feature_extractor(input_tensor)
+            features = self.feature_extractor(input_tensor)   # features [1, 512, 56, 56]   [1, 1024, 28, 28]
 
-        features = {layer: self.feature_pooler(feature) for layer, feature in features.items()}
-        embedding = self.generate_embedding(features)
+        features = {layer: self.feature_pooler(feature) for layer, feature in features.items()}   # features [1, 512, 56, 56]   [1, 1024, 28, 28]
+        embedding = self.generate_embedding(features)         # embedding [1, 1536, 56, 56], HW以第一个layer为基准
 
         if self.tiler:
             embedding = self.tiler.untile(embedding)
@@ -87,12 +87,12 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
         embedding = self.reshape_embedding(embedding)
 
         if self.training:
-            output = embedding
+            output = embedding        # embedding [3136, 1536]
         else:
             # apply nearest neighbor search
             patch_scores, locations = self.nearest_neighbors(embedding=embedding, n_neighbors=1)
             # reshape to batch dimension
-            patch_scores = patch_scores.reshape((batch_size, -1))
+            patch_scores = patch_scores.reshape((batch_size, -1))  # [1, 1024]
             locations = locations.reshape((batch_size, -1))
             # compute anomaly score
             pred_score = self.compute_anomaly_score(patch_scores, locations, embedding)
@@ -182,10 +182,10 @@ class PatchcoreModel(DynamicBufferMixin, nn.Module):
             Tensor: Patch scores.
             Tensor: Locations of the nearest neighbor(s).
         """
-        distances = self.euclidean_dist(embedding, self.memory_bank)
+        distances = self.euclidean_dist(embedding, self.memory_bank)   # embedding: [1024, 1536] memory_bank: [10240, 1536] distances [1024, 10240]
         if n_neighbors == 1:
             # when n_neighbors is 1, speed up computation by using min instead of topk
-            patch_scores, locations = distances.min(1)
+            patch_scores, locations = distances.min(1)   # patch_scores[1024]; 
         else:
             patch_scores, locations = distances.topk(k=n_neighbors, largest=False, dim=1)
         return patch_scores, locations

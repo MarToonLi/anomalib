@@ -128,3 +128,5 @@ class Fastflow(AnomalyModule):
             LearningType: Learning type of the model.
         """
         return LearningType.ONE_CLASS
+
+
